@@ -703,7 +703,7 @@ handle_xev(void) {
 			/* clickable areas */
 			int w_id = ev.xbutton.window == dzen.title_win.win ? 0 : 1;
 			sens_w w = window_sens[w_id];
-			for(i=w.sens_areas_cnt; i>=0; i--) {
+			for(i=w.sens_areas_cnt-1; i>=0; i--) {
 				if(ev.xbutton.window == w.sens_areas[i].win &&
 						ev.xbutton.button == w.sens_areas[i].button &&
 						(ev.xbutton.x >=  w.sens_areas[i].start_x+xorig[w_id] &&
