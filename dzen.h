@@ -58,7 +58,7 @@ struct Fnt {
 	int height;
 #ifdef DZEN_XFT
 	XftFont *xftfont;
-	XGlyphInfo *extents;
+	XGlyphInfo extents;
 	int width;
 #endif
 };

@@ -80,10 +80,10 @@ textnw(Fnt *font, const char *text, unsigned int len) {
 	}
 	return XTextWidth(font->xfont, text, len);
 #else
-	XftTextExtentsUtf8(dzen.dpy, dzen.font.xftfont, (unsigned const char *) text, strlen(text), dzen.font.extents);
-	if(dzen.font.extents->height > dzen.font.height)
-		dzen.font.height = dzen.font.extents->height;
-	return dzen.font.extents->xOff;
+	XftTextExtentsUtf8(dzen.dpy, dzen.font.xftfont, (unsigned const char *) text, strlen(text), &dzen.font.extents);
+	if(dzen.font.extents.height > dzen.font.height)
+		dzen.font.height = dzen.font.extents.height;
+	return dzen.font.extents.xOff;
 #endif
 }
 
@@ -162,10 +162,9 @@ setfont(const char *fontstr) {
 	   dzen.font.xftfont = XftFontOpenName(dzen.dpy, dzen.screen, fontstr);
 	if(!dzen.font.xftfont)
 	   eprint("error, cannot load font: '%s'\n", fontstr);
-	dzen.font.extents = malloc(sizeof(XGlyphInfo));
-	XftTextExtentsUtf8(dzen.dpy, dzen.font.xftfont, (unsigned const char *) fontstr, strlen(fontstr), dzen.font.extents);
+	XftTextExtentsUtf8(dzen.dpy, dzen.font.xftfont, (unsigned const char *) fontstr, strlen(fontstr), &dzen.font.extents);
 	dzen.font.height = dzen.font.xftfont->ascent + dzen.font.xftfont->descent;
-	dzen.font.width = (dzen.font.extents->width)/strlen(fontstr);
+	dzen.font.width = (dzen.font.extents.width)/strlen(fontstr);
 #endif
 }
 
@@ -291,8 +290,8 @@ get_pos_vals(char *s, int *d, int *a) {
 		} else
 			ret=2;
 
-		if(s[++i]) {
-			*a=atoi(s+i);
+		if(s[i]) {
+			*a=atoi(s+i+1);
 		} else
 			ret = 1;
 
@@ -696,6 +695,7 @@ parse_line(const char *line, int lnr, int align, int reverse, int nodraw) {
 							lastfg = tval[0] ? (unsigned)getcolor(tval) : dzen.norm[ColFG];
 							XSetForeground(dzen.dpy, dzen.tgc, lastfg);
 #ifdef DZEN_XFT
+                            if(xftcs_f) free(xftcs);
 							if(tval[0]) {
 								xftcs = estrdup(tval);
 								xftcs_f = 1;
@@ -819,16 +819,6 @@ parse_line(const char *line, int lnr, int align, int reverse, int nodraw) {
 
 				XftDrawStringUtf8(xftd, &xftc, 
 						cur_fnt->xftfont, px, py + dzen.font.xftfont->ascent, (const FcChar8 *)lbuf, strlen(lbuf));
-
-				if(xftcs_f) {
-					free(xftcs);
-					xftcs_f = 0;
-				}
-				if(xftcs_bgf) {
-					free(xftcs_bg);
-					xftcs_bgf = 0;
-				}
-
 #endif
 
 				max_y = MAX(max_y, py+dzen.font.height);
@@ -918,6 +908,14 @@ parse_line(const char *line, int lnr, int align, int reverse, int nodraw) {
 
 #ifdef DZEN_XFT
 		XftDrawDestroy(xftd);
+        if(xftcs_f) {
+          free(xftcs);
+          xftcs_f = 0;
+        }
+        if(xftcs_bgf) {
+          free(xftcs_bg);
+          xftcs_bgf = 0;
+        }
 #endif
 	}
 
